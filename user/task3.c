@@ -4,14 +4,28 @@
 
 int main(int argc, char* argv[]) {
 	int p[2];
-	pipe(p);
+	int res = pipe(p);
+
+	if (res < 0) {
+		fprintf(2, "pipe error!\n");
+		exit(1);
+	}
 	
 	int pid = fork();
 	if (pid > 0) {
 		close(p[0]);
 		for (int i = 1; i < argc; ++i) {
-			write(p[1], argv[i], strlen(argv[i]));
-			write(p[1], "\n", 1);
+			int res = write(p[1], argv[i], strlen(argv[i]));
+			if (res < 0) {
+				fprintf(2, "write error!");
+				break;
+			}
+			
+			res = write(p[1], "\n", 1);
+			if (res < 0) {
+				fprintf(2, "write error!");
+				break;
+			}
 		}
 		close(p[1]);
 
@@ -26,6 +40,7 @@ int main(int argc, char* argv[]) {
 
 		char *argv[] = {"/wc", 0};
 		exec("/wc", argv);
+		fprintf(2, "exec error!\n");
 		
 		exit(0);
 	} else {
